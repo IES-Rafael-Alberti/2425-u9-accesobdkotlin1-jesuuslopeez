@@ -1,4 +1,5 @@
 package org.example
+
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
@@ -12,43 +13,43 @@ fun crearTablas(connection: Connection) {
             statement.executeUpdate("DROP TABLE IF EXISTS Usuario")
             println("Tablas borradas")
 
-            statement.executeUpdate("""
-                CREATE TABLE Usuario (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    nombre VARCHAR(255) NOT NULL,
-                    email VARCHAR(255) UNIQUE
-                );
-            """.trimIndent())
+            statement.executeUpdate(
+                "CREATE TABLE Usuario (" +
+                        "id INT AUTO_INCREMENT PRIMARY KEY," +
+                        "nombre VARCHAR(255) NOT NULL," +
+                        "email VARCHAR(255) UNIQUE" +
+                        ");"
+            )
 
-            statement.executeUpdate("""
-                CREATE TABLE Producto (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    nombre VARCHAR(255) NOT NULL,
-                    precio DECIMAL NOT NULL,
-                    stock INT NOT NULL
-                );
-            """.trimIndent())
+            statement.executeUpdate(
+                "CREATE TABLE Producto (" +
+                        "id INT AUTO_INCREMENT PRIMARY KEY," +
+                        "nombre VARCHAR(255) NOT NULL," +
+                        "precio DECIMAL NOT NULL," +
+                        "stock INT NOT NULL" +
+                        ");"
+            )
 
-            statement.executeUpdate("""
-                CREATE TABLE Pedido (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    precioTotal DECIMAL NOT NULL,
-                    idUsuario INT,
-                    FOREIGN KEY (idUsuario) REFERENCES Usuario(id)
-                );
-            """.trimIndent())
+            statement.executeUpdate(
+                "CREATE TABLE Pedido (" +
+                        "id INT AUTO_INCREMENT PRIMARY KEY," +
+                        "precioTotal DECIMAL NOT NULL," +
+                        "idUsuario INT," +
+                        "FOREIGN KEY (idUsuario) REFERENCES Usuario(id)" +
+                        ");"
+            )
 
-            statement.executeUpdate("""
-                CREATE TABLE LineaPedido (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    cantidad INT NOT NULL,
-                    precio DECIMAL NOT NULL,
-                    idPedido INT,
-                    idProducto INT,
-                    FOREIGN KEY (idPedido) REFERENCES Pedido(id),
-                    FOREIGN KEY (idProducto) REFERENCES Producto(id)
-                );
-            """.trimIndent())
+            statement.executeUpdate(
+                "CREATE TABLE LineaPedido (" +
+                        "id INT AUTO_INCREMENT PRIMARY KEY," +
+                        "cantidad INT NOT NULL," +
+                        "precio DECIMAL NOT NULL," +
+                        "idPedido INT," +
+                        "idProducto INT," +
+                        "FOREIGN KEY (idPedido) REFERENCES Pedido(id)," +
+                        "FOREIGN KEY (idProducto) REFERENCES Producto(id)" +
+                        ");"
+            )
 
             println("Tablas creadas")
         }
@@ -140,10 +141,10 @@ fun insertLinea(connection: Connection) {
             )
 
             for (linea in lineasPedido) {
-                statement.setInt(1, (linea[0] as Int))
-                statement.setInt(2, (linea[1] as Int))
-                statement.setInt(3, (linea[2] as Int))
-                statement.setDouble(4, (linea[3] as Double))
+                statement.setInt(1, linea[0] as Int)
+                statement.setInt(2, linea[1] as Int)
+                statement.setInt(3, linea[2] as Int)
+                statement.setDouble(4, linea[3] as Double)
                 statement.executeUpdate()
             }
             println("Líneas de pedido insertadas")
@@ -153,20 +154,80 @@ fun insertLinea(connection: Connection) {
     }
 }
 
+fun consultarLineasPedido(connection: Connection, idPedido: Int) {
+    val sql = "SELECT * FROM LineaPedido WHERE idPedido = ?"
+
+    try {
+        connection.prepareStatement(sql).use { statement ->
+            statement.setInt(1, idPedido)
+            val resultSet = statement.executeQuery()
+
+            while (resultSet.next()) {
+                val id = resultSet.getInt("id")
+                val cantidad = resultSet.getInt("cantidad")
+                val precio = resultSet.getDouble("precio")
+                val idProducto = resultSet.getInt("idProducto")
+
+                println("ID: $id, Producto ID: $idProducto, Cantidad: $cantidad, Precio: $precio")
+            }
+        }
+    } catch (e: SQLException) {
+        e.printStackTrace()
+    }
+}
+
+fun consultarSumaPedidosUsuario(connection: Connection, nombreUsuario: String) {
+    val sql = """
+        SELECT SUM(p.precioTotal) AS total
+        FROM Pedido p
+        JOIN Usuario u ON p.idUsuario = u.id
+        WHERE u.nombre = ?
+    """
+
+    try {
+        connection.prepareStatement(sql).use { statement ->
+            statement.setString(1, nombreUsuario)
+            val resultSet = statement.executeQuery()
+
+            if (resultSet.next()) {
+                val total = resultSet.getDouble("total")
+                println("Total de los pedidos de '$nombreUsuario': $total")
+            }
+        }
+    } catch (e: SQLException) {
+        e.printStackTrace()
+    }
+}
+
+fun consultarUsuariosPorProducto(connection: Connection, nombreProducto: String) {
+    val sql = """
+        SELECT DISTINCT u.nombre
+        FROM Usuario u
+        JOIN Pedido p ON u.id = p.idUsuario
+        JOIN LineaPedido lp ON p.id = lp.idPedido
+        JOIN Producto pr ON lp.idProducto = pr.id
+        WHERE pr.nombre = ?
+    """
+
+    try {
+        connection.prepareStatement(sql).use { statement ->
+            statement.setString(1, nombreProducto)
+            val resultSet = statement.executeQuery()
+
+            while (resultSet.next()) {
+                val nombreUsuario = resultSet.getString("nombre")
+                println(nombreUsuario)
+            }
+        }
+    } catch (e: SQLException) {
+        e.printStackTrace()
+    }
+}
+
 fun main() {
-   val url = "jdbc:h2:./DataBase/mydb"
-   val usuario = "user"
-   val contrasena = "password"
-//   try {
-//       Class.forName("org.h2.Driver")
-//       val conexion = DriverManager.getConnection(url, usuario, contrasena)
-//       println("Conexión exitosa")
-//       conexion.close()
-//   } catch (e: SQLException) {
-//       println("Error en la conexión: ${e.message}")
-//   } catch (e: ClassNotFoundException) {
-//       println("No se encontró el driver JDBC: ${e.message}")
-//   }
+    val url = "jdbc:h2:./DataBase/mydb"
+    val usuario = "user"
+    val contrasena = "password"
 
     try {
         DriverManager.getConnection(url, usuario, contrasena).use { connection ->
@@ -175,6 +236,10 @@ fun main() {
             insertProductos(connection)
             insertPedidos(connection)
             insertLinea(connection)
+
+            consultarLineasPedido(connection, 1)
+            consultarSumaPedidosUsuario(connection, "Ataulfo Rodríguez")
+            consultarUsuariosPorProducto(connection, "Abanico")
         }
     } catch (e: SQLException) {
         e.printStackTrace()
