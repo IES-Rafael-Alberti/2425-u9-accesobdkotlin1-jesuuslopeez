@@ -273,6 +273,64 @@ fun eliminarPedido(connection: Connection, idPedido: Int) {
     }
 }
 
+fun actualizarPrecioProducto(connection: Connection, nombreProducto: String, nuevoPrecio: Double) {
+    val sql = "UPDATE Producto SET precio = ? WHERE nombre = ?"
+
+    try {
+        connection.prepareStatement(sql).use { statement ->
+            statement.setDouble(1, nuevoPrecio)
+            statement.setString(2, nombreProducto)
+            val filasAfectadas = statement.executeUpdate()
+            println("Precio de '$nombreProducto' actualizado: $filasAfectadas filas modificadas")
+        }
+    } catch (e: SQLException) {
+        e.printStackTrace()
+    }
+}
+
+fun actualizarLineaPedido(connection: Connection, idLineaPedido: Int, nuevoIdProducto: Int) {
+    try {
+        val sqlPrecioProducto = "SELECT precio FROM Producto WHERE nombre = ?"
+        var precioAbanico = 0.0
+
+        connection.prepareStatement(sqlPrecioProducto).use { statement ->
+            statement.setString(1, "Abanico")
+            val resultSet = statement.executeQuery()
+            if (resultSet.next()) {
+                precioAbanico = resultSet.getDouble("precio")
+            }
+        }
+
+        val sqlCantidadLineaPedido = "SELECT cantidad FROM LineaPedido WHERE id = ?"
+        var cantidad = 0
+
+        connection.prepareStatement(sqlCantidadLineaPedido).use { statement ->
+            statement.setInt(1, idLineaPedido)
+            val resultSet = statement.executeQuery()
+            if (resultSet.next()) {
+                cantidad = resultSet.getInt("cantidad")
+            }
+        }
+
+        val nuevoPrecio = cantidad * precioAbanico
+
+        val sqlActualizarLineaPedido = "UPDATE LineaPedido SET idProducto = ?, precio = ? WHERE id = ?"
+
+        connection.prepareStatement(sqlActualizarLineaPedido).use { statement ->
+            statement.setInt(1, nuevoIdProducto)
+            statement.setDouble(2, nuevoPrecio)
+            statement.setInt(3, idLineaPedido)
+            val filasAfectadas = statement.executeUpdate()
+            println("Línea de pedido actualizada: $filasAfectadas filas modificada")
+        }
+
+    } catch (e: SQLException) {
+        e.printStackTrace()
+    }
+}
+
+
+
 fun main() {
     val url = "jdbc:h2:./DataBase/mydb"
     val usuario = "user"
@@ -293,6 +351,9 @@ fun main() {
             eliminarUsuario(connection, "Cornelio Ramírez")
             eliminarProductoPrecio(connection, 24.99)
             eliminarPedido(connection, 3)
+
+            actualizarPrecioProducto(connection, "Abanico", 99.99)
+            actualizarLineaPedido(connection, 3, 2)
         }
     } catch (e: SQLException) {
         e.printStackTrace()
