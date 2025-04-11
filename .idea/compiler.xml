@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="h2db" target="23" />
+      <module name="h2db.main" target="23" />
+      <module name="h2db.test" target="23" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

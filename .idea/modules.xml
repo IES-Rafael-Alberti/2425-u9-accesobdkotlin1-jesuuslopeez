@@ -4,6 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/2425-u9-accesobdkotlin1-jesuuslopeez.iml" filepath="$PROJECT_DIR$/.idea/2425-u9-accesobdkotlin1-jesuuslopeez.iml" />
       <module fileurl="file://$PROJECT_DIR$/h2db.iml" filepath="$PROJECT_DIR$/h2db.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/h2db.main.iml" filepath="$PROJECT_DIR$/.idea/modules/h2db.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/h2db.test.iml" filepath="$PROJECT_DIR$/.idea/modules/h2db.test.iml" />
     </modules>
   </component>
 </project>

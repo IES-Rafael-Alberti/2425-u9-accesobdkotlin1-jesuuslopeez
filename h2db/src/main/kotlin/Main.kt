@@ -224,6 +224,55 @@ fun consultarUsuariosPorProducto(connection: Connection, nombreProducto: String)
     }
 }
 
+fun eliminarUsuario(connection: Connection, nombreUsuario: String) {
+    val sql = "DELETE FROM Usuario WHERE nombre = ?"
+
+    try {
+        connection.prepareStatement(sql).use { statement ->
+            statement.setString(1, nombreUsuario)
+            val filasAfectadas = statement.executeUpdate()
+            println("Usuarios eliminados: $filasAfectadas")
+        }
+    } catch (e: SQLException) {
+        e.printStackTrace()
+    }
+}
+
+fun eliminarProductoPrecio(connection: Connection, precioProducto: Double) {
+    val sql = "DELETE FROM Producto WHERE precio = ?"
+
+    try {
+        connection.prepareStatement(sql).use { statement ->
+            statement.setDouble(1, precioProducto)
+            val filasAfectadas = statement.executeUpdate()
+            println("Productos eliminados: $filasAfectadas")
+        }
+    } catch (e: SQLException) {
+        e.printStackTrace()
+    }
+}
+
+fun eliminarPedido(connection: Connection, idPedido: Int) {
+    try {
+        val sqlEliminarLineas = "DELETE FROM LineaPedido WHERE idPedido = ?"
+        connection.prepareStatement(sqlEliminarLineas).use { statement ->
+            statement.setInt(1, idPedido)
+            val filasAfectadas = statement.executeUpdate()
+            println("Líneas de pedido eliminadas: $filasAfectadas")
+        }
+
+        val sqlEliminarPedido = "DELETE FROM Pedido WHERE id = ?"
+        connection.prepareStatement(sqlEliminarPedido).use { statement ->
+            statement.setInt(1, idPedido)
+            val filasAfectadas = statement.executeUpdate()
+            println("Pedidos eliminados: $filasAfectadas")
+        }
+
+    } catch (e: SQLException) {
+        e.printStackTrace()
+    }
+}
+
 fun main() {
     val url = "jdbc:h2:./DataBase/mydb"
     val usuario = "user"
@@ -240,6 +289,10 @@ fun main() {
             consultarLineasPedido(connection, 1)
             consultarSumaPedidosUsuario(connection, "Ataulfo Rodríguez")
             consultarUsuariosPorProducto(connection, "Abanico")
+
+            eliminarUsuario(connection, "Cornelio Ramírez")
+            eliminarProductoPrecio(connection, 24.99)
+            eliminarPedido(connection, 3)
         }
     } catch (e: SQLException) {
         e.printStackTrace()
